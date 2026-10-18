@@ -1,0 +1,15 @@
+
+# Local Python environment and generated files
+venv311/
+__pycache__/
+*.py[cod]
+
+# Local databases and logs
+mybot.sqlite3
+admin_logs.json
+user_events.json
+
+# Secrets
+.env
+.env.*
+!.env.example

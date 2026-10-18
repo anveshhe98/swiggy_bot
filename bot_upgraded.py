@@ -23,6 +23,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 from functools import wraps
 import hashlib
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import aiohttp
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
@@ -210,7 +211,7 @@ LN_DAY_BOUNDARIES = [
     (8,  "2026-10-03T11:00:00+05:30", "2026-10-04T06:00:00+05:30"),
     (9,  "2026-10-04T11:00:00+05:30", "2026-10-05T06:00:00+05:30"),
     (10, "2026-10-05T11:00:00+05:30", "2026-10-06T06:00:00+05:30"),
-}
+]
 
 def ln_current_day() -> Optional[int]:
     now = datetime.now(timezone(timedelta(hours=5, minutes=30)))
@@ -336,24 +337,23 @@ def main_keyboard():
     """Advanced inline keyboard"""
     buttons = [
         [
-            KeyboardButton("⚡ RUN (10 links)", callback_data="run_links"),
-            KeyboardButton("🌙 Late Night", callback_data="night_cash"),
+            InlineKeyboardButton("⚡ RUN (10 links)", callback_data="run_links"),
+            InlineKeyboardButton("🌙 Late Night", callback_data="night_cash"),
         ],
         [
-            KeyboardButton("📊 Status", callback_data="status"),
-            KeyboardButton("📤 Export JSON", callback_data="export_json"),
+            InlineKeyboardButton("📊 Status", callback_data="status"),
+            InlineKeyboardButton("📤 Export JSON", callback_data="export_json"),
         ],
         [
-            KeyboardButton("🔐 Login", callback_data="login"),
-            KeyboardButton("📤 Session", callback_data="import_session"),
+            InlineKeyboardButton("🔐 Login", callback_data="login"),
+            InlineKeyboardButton("📤 Session", callback_data="import_session"),
         ],
         [
-            KeyboardButton("🚪 Logout", callback_data="logout"),
-            KeyboardButton("🌐 Dashboard", callback_data="dashboard_url"),
+            InlineKeyboardButton("🚪 Logout", callback_data="logout"),
+            InlineKeyboardButton("🌐 Dashboard", callback_data="dashboard_url"),
         ],
     ]
-    return ReplyKeyboardMarkup(buttons, resize_keyboard=True, one_time_keyboard=False)
-
+    return InlineKeyboardMarkup(buttons)
 def parse_session_string(text: str) -> Dict:
     """Parse session JSON from text"""
     try:
@@ -383,6 +383,33 @@ async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🎮 Advanced Keyboard - Choose action:"
     )
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=main_keyboard())
+
+async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == "run_links":
+        await run_cmd(update, context)
+    elif query.data == "night_cash":
+        await night_cash_cmd(update, context)
+    elif query.data == "status":
+        await status_cmd(update, context)
+    elif query.data == "login":
+        await query.message.reply_text(
+            "Please sign in through Swiggy's official app or website."
+        )
+    elif query.data == "export_json":
+        await export_json_cmd(update, context)
+    elif query.data == "import_session":
+        await query.message.reply_text(
+            "For security, don't paste session cookies or tokens into Telegram."
+        )
+    elif query.data == "logout":
+        await logout_cmd(update, context)
+    elif query.data == "dashboard_url":
+        await query.message.reply_text(
+            "Configure the dashboard URL for your local setup first."
+        )
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
@@ -745,6 +772,7 @@ def setup_bot():
     bot_app.add_handler(CommandHandler("status", status_cmd))
     bot_app.add_handler(CommandHandler("run", run_cmd))
     bot_app.add_handler(CommandHandler("logout", logout_cmd))
+    bot_app.add_handler(CallbackQueryHandler(inline_button_handler))
 
     bot_app.add_handler(ConversationHandler(
         entry_points=[MessageHandler(filters.Regex("🔐 Login"), lambda u, c: _do_login_phone(u, c, ""))],
