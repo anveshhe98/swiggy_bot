@@ -42,9 +42,9 @@ from telegram.ext import (
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURATION
 # ─────────────────────────────────────────────────────────────────────────────
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8551174229:AAFQMfAqAfR6tRtgwRHOFEff28Y5LGNWqb4").strip()
+BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123").strip()
-ADMIN_IDS: List[int] = [8645142724]
+ADMIN_IDS: List[int] = [6371879003]
 FLASK_SECRET = os.getenv("FLASK_SECRET", secrets.token_hex(32))
 PORT = int(os.getenv("PORT", "5000"))
 
